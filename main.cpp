@@ -34,8 +34,6 @@ int main() {
 
   window.setClearColor(glm::vec4(0, 0, 0, 1));
 
-  glDisable(GL_CULL_FACE);
-
   // Initialize framebuffer texture
   {
     glGenTextures(1, &framebufferTexture);
