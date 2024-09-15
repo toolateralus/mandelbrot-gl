@@ -12,14 +12,14 @@ void main() {
   ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
   
   if (pixelCoords.x < int(resolution.x) && pixelCoords.y < int(resolution.y)) {
-    vec2 c = (vec2(pixelCoords) / resolution) * 2.0 - vec2(1.5, 1.0);
+    dvec2 c = (dvec2(pixelCoords) / resolution) * 2.0 - dvec2(1.5, 1.0);
     c = c / zoom + pan; // Apply zoom and pan
-    vec2 z = vec2(0.0);
+    dvec2 z = dvec2(0.0);
     int iterations = 0;
-    const int maxIterations = 100;
+    int maxIterations = int(100.0 * (log2(zoom) + 1));
     
-    while (length(z) < 2.0 && iterations < maxIterations) {
-      z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    while (z.x * z.x + z.y * z.y < 4.0 && iterations < maxIterations) {
+      z = dvec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
       iterations++;
     }
     
@@ -29,7 +29,6 @@ void main() {
         0.5 + 0.5 * cos(3.0 + color * 6.28318 + 2.09439),
         0.5 + 0.5 * cos(3.0 + color * 6.28318 + 4.18878)
     );
-    col = mix(vec3(0.5), col, 0.5); // Blend with gray to reduce saturation
     imageStore(outputTexture, pixelCoords, vec4(col, 1.0));
   }
 }
