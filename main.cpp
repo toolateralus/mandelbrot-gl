@@ -89,7 +89,7 @@ int main() {
     transform = glm::translate(transform, glm::dvec3(-1, -1, 0));
     transform = glm::scale(transform, glm::dvec3(2, 2, 1) /
                                           glm::dvec3(window.resolution, 1));
-    
+
     // render
     {
       computeShader.use();
@@ -104,38 +104,41 @@ int main() {
       glDispatchCompute(window.resolution.x / 16, window.resolution.y / 16, 1);
       glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    static double lastFrameTime = 0;
-    double thisFrameTime = glfwGetTime();
-    fullscreenQuad.draw(framebufferTexture, "outputTexture");
-    fontRenderer.renderText(std::format("{:.1f} fps", 1 / (thisFrameTime - lastFrameTime)), {0, 0}, 1, glm::vec4(1));
-    lastFrameTime = thisFrameTime;
-    glFinish();
-    
-    // take inputs
-    {
-      if (Input::isKeyDown(GLFW_KEY_R)) {
-        Shader::hotReloadAll();
-        pan = {0, 0};
-        zoom = 1.0f;
-      }
+      static double lastFrameTime = 0;
+      double thisFrameTime = glfwGetTime();
+      fullscreenQuad.draw(framebufferTexture, "outputTexture");
+      fontRenderer.renderText(
+          std::format("{:.1f} fps", 1 / (thisFrameTime - lastFrameTime)),
+          {0, 0}, 1, glm::vec4(1));
+      lastFrameTime = thisFrameTime;
+      glFinish();
 
-      static auto lastMousePos = Input::getMousePos();
-      float sensitivity = 0.001f;
+      // take inputs
+      {
+        if (Input::isKeyDown(GLFW_KEY_R)) {
+          Shader::hotReloadAll();
+          pan = {0, 0};
+          zoom = 1.0f;
+        }
 
-      if (Input::isButtonDown(GLFW_MOUSE_BUTTON_1)) {
-        auto pos = Input::getMousePos();
-        auto delta = (lastMousePos - pos) * sensitivity / zoom;
-        pan.x += delta.x;
-        pan.y -= delta.y;
-        lastMousePos = pos;
-      } else {
-        lastMousePos = Input::getMousePos();
-      }
+        static auto lastMousePos = Input::getMousePos();
+        float sensitivity = 0.001f;
 
-      auto scrollDelta = Input::scrollDelta();
+        if (Input::isButtonDown(GLFW_MOUSE_BUTTON_1)) {
+          auto pos = Input::getMousePos();
+          auto delta = (lastMousePos - pos) * sensitivity / zoom;
+          pan.x += delta.x;
+          pan.y -= delta.y;
+          lastMousePos = pos;
+        } else {
+          lastMousePos = Input::getMousePos();
+        }
 
-      if (scrollDelta.length() >= 0.1) {
-        zoom *= (1.0f + scrollDelta.y * 0.1f);
+        auto scrollDelta = Input::scrollDelta();
+
+        if (scrollDelta.length() >= 0.1) {
+          zoom *= (1.0f + scrollDelta.y * 0.1f);
+        }
       }
     }
   });
