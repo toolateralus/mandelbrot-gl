@@ -102,10 +102,11 @@ int main() {
     glDispatchCompute(window.resolution.x / 16, window.resolution.y / 16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    static int lastFrameTime = 0;
+    static double lastFrameTime = 0;
+    double thisFrameTime = glfwGetTime();
     fullscreenQuad.draw(framebufferTexture, "outputTexture");
-    fontRenderer.renderText(std::format("{} fps", lastFrameTime - glfwGetTime()), {0, 0}, 1, glm::vec4(1));
-    lastFrameTime = glfwGetTime();
+    fontRenderer.renderText(std::format("{:.1f} fps", 1 / (thisFrameTime - lastFrameTime)), {0, 0}, 1, glm::vec4(1));
+    lastFrameTime = thisFrameTime;
     glFinish();
     
     glfwSwapBuffers(window.window);
