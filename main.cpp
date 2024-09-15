@@ -53,7 +53,7 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, 0);
   });
 
-  glm::vec2 pan = {0, 0};
+  glm::dvec2 pan = {0, 0};
   float zoom = 1.0f;
 
   while (!glfwWindowShouldClose(window.window)) {
@@ -61,7 +61,7 @@ int main() {
 
     computeShader.use();
     computeShader.setVec2("resolution", window.resolution);
-    computeShader.setVec2("pan", pan);
+    computeShader.setDVec2("pan", pan);
     computeShader.setFloat("zoom", zoom);
 
     glBindImageTexture(1, framebufferTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY,
@@ -99,7 +99,6 @@ int main() {
 
     if (scrollDelta.length() >= 0.1) {
       zoom *= (1.0f + scrollDelta.y * 0.1f);
-      std::cout << zoom << '\n';
     }
   }
   glDeleteTextures(1, &framebufferTexture);

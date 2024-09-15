@@ -6,7 +6,7 @@ layout(binding = 1, rgba32f) uniform image2D outputTexture;
 
 uniform vec2 resolution;
 uniform float zoom;
-uniform vec2 pan;
+uniform dvec2 pan;
 
 void main() {
   dvec2 c = (gl_GlobalInvocationID.xy / resolution - 0.5) * 2.0;
