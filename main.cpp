@@ -65,6 +65,9 @@ int main() {
   glm::dvec2 pan = {0, 0};
   float zoom = 1.0f;
 
+  glEnable(GL_ALPHA_TEST);
+  glDisable(GL_DEPTH_TEST);
+
   while (!glfwWindowShouldClose(window.window)) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -99,11 +102,10 @@ int main() {
     glDispatchCompute(window.resolution.x / 16, window.resolution.y / 16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    fullscreenQuad.draw(framebufferTexture, "outputTexture");
-    
     static int lastFrameTime = 0;
-    fontRenderer.renderText(std::format("{} fps", glfwGetTime() - lastFrameTime) , {0, 0}, 1, glm::vec4(1));
-    
+    fullscreenQuad.draw(framebufferTexture, "outputTexture");
+    fontRenderer.renderText(std::format("{} fps", lastFrameTime - glfwGetTime()), {0, 0}, 1, glm::vec4(1));
+    lastFrameTime = glfwGetTime();
     glFinish();
     
     glfwSwapBuffers(window.window);
