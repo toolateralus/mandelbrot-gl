@@ -9,26 +9,22 @@ uniform float zoom;
 uniform vec2 pan;
 
 void main() {
-  ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+  dvec2 c = (gl_GlobalInvocationID.xy / resolution - 0.5) * 2.0;
+  c = c / zoom + pan; // Apply zoom and pan
+  dvec2 z = dvec2(0.0);
+  int iterations = 0;
+  int maxIterations = int(100.0 * (log2(zoom) + 1));
   
-  if (pixelCoords.x < int(resolution.x) && pixelCoords.y < int(resolution.y)) {
-    dvec2 c = (dvec2(pixelCoords) / resolution) * 2.0 - dvec2(1.5, 1.0);
-    c = c / zoom + pan; // Apply zoom and pan
-    dvec2 z = dvec2(0.0);
-    int iterations = 0;
-    int maxIterations = int(100.0 * (log2(zoom) + 1));
-    
-    while (z.x * z.x + z.y * z.y < 4.0 && iterations < maxIterations) {
-      z = dvec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
-      iterations++;
-    }
-    
-    float color = float(iterations) / float(maxIterations);
-    vec3 col = vec3(
-        0.5 + 0.5 * cos(3.0 + color * 6.28318),
-        0.5 + 0.5 * cos(3.0 + color * 6.28318 + 2.09439),
-        0.5 + 0.5 * cos(3.0 + color * 6.28318 + 4.18878)
-    );
-    imageStore(outputTexture, pixelCoords, vec4(col, 1.0));
+  while (z.x * z.x + z.y * z.y < 4.0 && iterations < maxIterations) {
+    z = dvec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    iterations++;
   }
+  
+  float color = float(iterations) / float(maxIterations);
+  vec3 col = vec3(
+      0.5 + 0.5 * cos(3.0 + color * 6.28318),
+      0.5 + 0.5 * cos(3.0 + color * 6.28318 + 2.09439),
+      0.5 + 0.5 * cos(3.0 + color * 6.28318 + 4.18878)
+  );
+  imageStore(outputTexture, ivec2(gl_GlobalInvocationID.xy), vec4(col, 1.0));
 }
