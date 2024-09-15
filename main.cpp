@@ -20,20 +20,21 @@
 #include <jstl/opengl/shader.hpp>
 #include <jstl/opengl/window.hpp>
 
+using namespace jstl::opengl;
+
 int main() {
 
   Window window("Renderer");
 
-  jstl::opengl::Shader shader("shader.vert", "shader.frag");
-  jstl::opengl::Shader computeShader("shader.comp");
+  Shader shader("shader.vert", "shader.frag");
+  Shader computeShader("shader.comp");
 
+  FullScreenQuad fullscreenQuad(&shader);
   GLuint framebufferTexture;
 
   window.setClearColor(glm::vec4(0, 0, 0, 1));
 
   glDisable(GL_CULL_FACE);
- 
-  FullScreenQuad fullscreenQuad(&shader);
 
   // Initialize framebuffer texture
   {
@@ -54,23 +55,50 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, 0);
   });
 
+  glm::vec2 pan = {0, 0};
+  float zoom = 1.0f;
+
   while (!glfwWindowShouldClose(window.window)) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     computeShader.use();
     computeShader.setVec2("resolution", window.resolution);
-    glBindImageTexture(1, framebufferTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+    computeShader.setVec2("pan", pan);
+    computeShader.setFloat("zoom", zoom);
+
+    glBindImageTexture(1, framebufferTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY,
+                       GL_RGBA32F);
     glDispatchCompute(window.resolution.x / 16, window.resolution.y / 16, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    
-    if (Input::isKeyDown(GLFW_KEY_R)) {
-      jstl::opengl::Shader::hotReloadAll();
-    }
-    
-    
+
     fullscreenQuad.draw(framebufferTexture, "outputTexture");
     glfwSwapBuffers(window.window);
     glfwPollEvents();
+
+    if (Input::isKeyDown(GLFW_KEY_R)) {
+      Shader::hotReloadAll();
+      pan = {0, 0};
+      zoom = 1.0f;
+    }
+
+    static auto lastMousePos = Input::getMousePos();
+    float sensitivity = 0.001f;
+
+    if (Input::isButtonDown(GLFW_MOUSE_BUTTON_1)) {
+      auto pos = Input::getMousePos();
+      auto delta = (lastMousePos - pos) * sensitivity / zoom;
+      pan.x += delta.x;
+      pan.y -= delta.y;
+      lastMousePos = pos;
+    } else {
+      lastMousePos = Input::getMousePos();
+    }
+
+    auto scrollDelta = Input::scrollDelta();
+
+    if (scrollDelta.length() >= 0.1) {
+      zoom *= (1.0f + scrollDelta.y * 0.1f);
+    }
   }
   glDeleteTextures(1, &framebufferTexture);
 }
