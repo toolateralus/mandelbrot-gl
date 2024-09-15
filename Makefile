@@ -1,6 +1,6 @@
 COMPILER := clang++
-COMPILER_FLAGS := -std=c++23 -g
-LD_FLAGS := -lGL -lGLEW -lglfw -lm -lassimp
+COMPILER_FLAGS := -std=c++23 -g -Ideps
+LD_FLAGS := -lGL -lGLEW -lglfw -lm -lfreetype
 OBJ_DIR := objs
 BIN_DIR := bin
 

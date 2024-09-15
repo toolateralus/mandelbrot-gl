@@ -20,6 +20,8 @@
 #include <jstl/opengl/shader.hpp>
 #include <jstl/opengl/window.hpp>
 
+#include "font.hpp"
+
 using namespace jstl::opengl;
 
 int main() {
@@ -28,6 +30,9 @@ int main() {
 
   Shader shader("shader.vert", "shader.frag");
   Shader computeShader("shader.comp");
+
+  font::FontRenderer fontRenderer{};
+  fontRenderer.setViewport(window.resolution);
 
   FullScreenQuad fullscreenQuad(&shader);
   GLuint framebufferTexture;
@@ -68,7 +73,7 @@ int main() {
       for (int j = 0; j < samplesPerAxis; j++) {
         offsets[i * samplesPerAxis + j] = glm::vec2(float(i) / float(samplesPerAxis), float(j) / float(samplesPerAxis));
       }
-    }
+    } 
 
     auto transform = glm::dmat4(1.0);
     // apply pan and zoom
@@ -91,6 +96,9 @@ int main() {
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
     fullscreenQuad.draw(framebufferTexture, "outputTexture");
+    
+    static int lastFrameTime = 0;
+    fontRenderer.renderText(std::format("{} fps", glfwGetTime() - lastFrameTime) , {0, 0}, 1, glm::vec4(1));
     
     glFinish();
     
