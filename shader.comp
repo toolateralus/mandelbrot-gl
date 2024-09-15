@@ -5,26 +5,34 @@ layout(local_size_x = 16, local_size_y = 16) in;
 layout(binding = 1, rgba32f) uniform image2D outputTexture;
 
 uniform vec2 resolution;
-uniform float zoom;
-uniform dvec2 pan;
+uniform dmat4 transform;
+uniform int maxIterations;
+uniform int samples;
+uniform vec2 offsets[32];
 
-void main() {
-  dvec2 c = (gl_GlobalInvocationID.xy / resolution - 0.5) * 2.0;
-  c = c / zoom + pan; // Apply zoom and pan
+vec3 sample_mandelbrot(dvec2 c) {
   dvec2 z = dvec2(0.0);
   int iterations = 0;
-  int maxIterations = int(100.0 * (log2(zoom) + 1));
-  
+
   while (z.x * z.x + z.y * z.y < 4.0 && iterations < maxIterations) {
     z = dvec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
     iterations++;
   }
   
-  float color = float(iterations) / float(maxIterations);
-  vec3 col = vec3(
-      0.5 + 0.5 * cos(3.0 + color * 6.28318),
-      0.5 + 0.5 * cos(3.0 + color * 6.28318 + 2.09439),
-      0.5 + 0.5 * cos(3.0 + color * 6.28318 + 4.18878)
-  );
-  imageStore(outputTexture, ivec2(gl_GlobalInvocationID.xy), vec4(col, 1.0));
+  float t = float(iterations) / float(maxIterations);
+  return vec3(
+    sin(3.0 + t * 6.28318),
+    sin(3.0 + t * 6.28318 + 2.09439),
+    sin(3.0 + t * 6.28318 + 4.18878)
+  ) * (1 - t);
+}
+
+void main() {
+  vec3 color = vec3(0.0);
+  for (int i = 0; i < samples; i++) {
+    dvec2 c = (transform * dvec4(gl_GlobalInvocationID.xy + offsets[i], 0, 1)).xy;
+    color += sample_mandelbrot(c);
+  }
+  color /= float(samples);
+  imageStore(outputTexture, ivec2(gl_GlobalInvocationID.xy), vec4(color, 1.0));
 }

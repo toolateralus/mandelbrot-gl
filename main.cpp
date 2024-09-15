@@ -59,10 +59,31 @@ int main() {
   while (!glfwWindowShouldClose(window.window)) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    const int samplesPerAxis = 1;
+    const int samples = samplesPerAxis * samplesPerAxis;
+    glm::vec2 offsets[32];
+    
+    // Generate offsets based on the number of samples per axis
+    for (int i = 0; i < samplesPerAxis; i++) {
+      for (int j = 0; j < samplesPerAxis; j++) {
+        offsets[i * samplesPerAxis + j] = glm::vec2(float(i) / float(samplesPerAxis), float(j) / float(samplesPerAxis));
+      }
+    }
+
+    auto transform = glm::dmat4(1.0);
+    // apply pan and zoom
+    transform = glm::translate(transform, glm::dvec3(pan, 0));
+    transform = glm::scale(transform, glm::dvec3(1 / zoom, 1 / zoom, 1));
+    // convert screen space to ndc
+    transform = glm::translate(transform, glm::dvec3(-1, -1, 0));
+    transform = glm::scale(transform, glm::dvec3(2, 2, 1) / glm::dvec3(window.resolution, 1));
+
     computeShader.use();
     computeShader.setVec2("resolution", window.resolution);
-    computeShader.setDVec2("pan", pan);
-    computeShader.setFloat("zoom", zoom);
+    computeShader.setVec2("offsets", offsets[0], 32);
+    computeShader.setDMat4("transform", transform);
+    computeShader.setInt("maxIterations", 100 * (glm::log(zoom) + 1));
+    computeShader.setInt("samples", samples);
 
     glBindImageTexture(1, framebufferTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY,
                        GL_RGBA32F);
