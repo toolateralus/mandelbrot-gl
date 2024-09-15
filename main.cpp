@@ -39,6 +39,10 @@ int main() {
 
   window.setClearColor(glm::vec4(0, 0, 0, 1));
 
+  window.resizeEvent().subscribe([&](int x, int y) {
+    fontRenderer.setViewport({x,y});
+  });
+
   // Initialize framebuffer texture
   {
     glGenTextures(1, &framebufferTexture);
