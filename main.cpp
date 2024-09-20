@@ -64,20 +64,21 @@ int main() {
 
   glm::dvec2 pan = {0, 0};
   float zoom = 1.0f;
+  int samplesPerAxis = 2;
 
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_BLEND, 0.5f);
   glDisable(GL_DEPTH_TEST);
+  glm::vec2 offsets[16];
 
   window.run([&] {
-    const int samplesPerAxis = 1;
     const int samples = samplesPerAxis * samplesPerAxis;
-    glm::vec2 offsets[32];
 
     for (int i = 0; i < samplesPerAxis; i++) {
       for (int j = 0; j < samplesPerAxis; j++) {
         offsets[i * samplesPerAxis + j] = glm::vec2(
-            float(i) / float(samplesPerAxis), float(j) / float(samplesPerAxis));
+          float(i) / float(samplesPerAxis), float(j) / float(samplesPerAxis)
+        );
       }
     }
 
@@ -94,22 +95,25 @@ int main() {
     {
       computeShader.use();
       computeShader.setVec2("resolution", window.resolution);
-      computeShader.setVec2("offsets", offsets[0], 32);
+      computeShader.setVec2("offsets", offsets[0], 16);
       computeShader.setDMat4("transform", transform);
       computeShader.setInt("maxIterations", 100 * (glm::log(zoom) + 1));
       computeShader.setInt("samples", samples);
 
       glBindImageTexture(1, framebufferTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY,
                          GL_RGBA32F);
-      glDispatchCompute(window.resolution.x / 16, window.resolution.y / 16, 1);
+      glDispatchCompute((window.resolution.x + 15) / 16, (window.resolution.y + 15) / 16, 1);
       glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
       static double lastFrameTime = 0;
       double thisFrameTime = glfwGetTime();
       fullscreenQuad.draw(framebufferTexture, "outputTexture");
       fontRenderer.renderText(
-          std::format("{:.1f} fps", 1 / (thisFrameTime - lastFrameTime)),
+          std::format("FPS: {:.1f}", 1 / (thisFrameTime - lastFrameTime)),
           {0, 0}, 1, glm::vec4(1));
+      fontRenderer.renderText(
+          std::format("MS: {}", samples),
+          {0, 48}, 1, glm::vec4(1));
       lastFrameTime = thisFrameTime;
       glFinish();
 
@@ -119,6 +123,14 @@ int main() {
           Shader::hotReloadAll();
           pan = {0, 0};
           zoom = 1.0f;
+        }
+
+        if (Input::isKeyPressed(GLFW_KEY_UP)) {
+          samplesPerAxis = std::min(4, samplesPerAxis + 1);
+        }
+
+        if (Input::isKeyPressed(GLFW_KEY_DOWN)) {
+          samplesPerAxis = std::max(1, samplesPerAxis - 1);
         }
 
         static auto lastMousePos = Input::getMousePos();

@@ -8,7 +8,7 @@ uniform vec2 resolution;
 uniform dmat4 transform;
 uniform int maxIterations;
 uniform int samples;
-uniform vec2 offsets[32];
+uniform vec2 offsets[16];
 
 vec3 sample_mandelbrot(dvec2 c) {
   dvec2 z = dvec2(0.0);
